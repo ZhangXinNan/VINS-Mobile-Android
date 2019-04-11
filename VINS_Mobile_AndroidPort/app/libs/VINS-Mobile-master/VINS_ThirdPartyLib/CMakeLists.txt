@@ -1,4 +1,4 @@
-set(boost_include_dir {path}/boost_1_63_0/)
+set(boost_include_dir /home/zhangxin/tools/boost_1_63_0/)
 add_library(boost_LIB INTERFACE)
 target_include_directories(
     boost_LIB
