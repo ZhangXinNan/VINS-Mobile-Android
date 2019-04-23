@@ -51,7 +51,8 @@ void BRIEF::compute(const cv::Mat &image,
     cv::Mat aux;
     if(image.depth() == 3)
     {
-      cv::cvtColor(image, aux, CV_RGB2GRAY);
+      cv::cvtColor(image, aux, cv::COLOR_RGB2GRAY); // opencv 4.1.0
+//      cv::cvtColor(image, aux, CV_RGB2GRAY);
     }
     else
     {
