@@ -12,7 +12,7 @@ NSTimeInterval ViewController::systemUptime() {
 
 ViewController::ViewController() {
     LOGI("ViewController Constructor");
-    this->instance = this;
+    ViewController::instance = this;
 }
 
 ViewController::~ViewController() {
@@ -180,7 +180,7 @@ void ViewController::processImage(cv::Mat &image, double timeStamp, bool isScree
         //cout << (videoCamera->grayscaleMode) << endl;
         //img_msg->header = [[NSDate date] timeIntervalSince1970];
         */
-        img_msg->header = systemUptime();//[[NSProcessInfo processInfo] systemUptime];
+        img_msg->header = ViewController::systemUptime();//[[NSProcessInfo processInfo] systemUptime];
         /*
         float Group[2];
         Group[0] = lowPart;
@@ -188,9 +188,9 @@ void ViewController::processImage(cv::Mat &image, double timeStamp, bool isScree
         double* time_now_decode = (double*)Group;
         double time_stamp = *time_now_decode;
         */
-        if(lateast_imu_time <= 0)
+        if(this->lateast_imu_time <= 0)
         {
-            LOGI("IMU Timestamp negative: %lf, abort processImage()", lateast_imu_time);
+            LOGI("IMU Timestamp negative: %lf, abort processImage()", this->lateast_imu_time);
             if(isScreenRotated)
                 cv::rotate(image, image, cv::ROTATE_180);
             return;
@@ -260,14 +260,14 @@ void ViewController::processImage(cv::Mat &image, double timeStamp, bool isScree
 //        TS(time_feature);
 
 
-        m_depth_feedback.lock();
+        this->m_depth_feedback.lock();
         this->featuretracker.solved_features = solved_features;
         this->featuretracker.solved_vins = solved_vins;
-        m_depth_feedback.unlock();
+        this->m_depth_feedback.unlock();
 
-        m_imu_feedback.lock();
-        this->featuretracker.imu_msgs = getImuMeasurements(img_msg->header);
-        m_imu_feedback.unlock();
+        this->m_imu_feedback.lock();
+        this->featuretracker.imu_msgs = this->getImuMeasurements(img_msg->header);
+        this->m_imu_feedback.unlock();
 
         vector<Point2f> good_pts;
         vector<double> track_len;
@@ -294,7 +294,7 @@ void ViewController::processImage(cv::Mat &image, double timeStamp, bool isScree
             //__android_log_print(ANDROID_LOG_INFO, APPNAME, "Img timestamp %lf",img_msg_buf.front()->header);
             this->m_buf.unlock();
             this->con.notify_one();
-            if(imageCacheEnabled)
+            if(this->imageCacheEnabled)
             {
                 image_data_cache.header = img_msg->header;
                 image_data_cache.image = image.clone();
@@ -321,7 +321,7 @@ void ViewController::processImage(cv::Mat &image, double timeStamp, bool isScree
         }
         TS(visualize);
         TS(imageCaching);
-        if(imageCacheEnabled)
+        if(this->imageCacheEnabled)
         {
             //use aligned vins and image
             if(!vins_pool.empty() && !image_pool.empty())
@@ -567,7 +567,7 @@ void ViewController::process() {
     this->con.wait(lk, [&] {
         measurements = this->getMeasurements();
         return measurements.size() != 0;
-//                return (measurements = getMeasurements()).size() != 0;
+//                return (measurements = this->getMeasurements()).size() != 0;
     });
     lk.unlock();
     waiting_lists = measurements.size();
@@ -588,14 +588,14 @@ void ViewController::process() {
         vins.processImage(image,header,waiting_lists);
         TE(process_image);
         // unable to get same timing system as the sensor timestamps: systemUptime(); // [[NSProcessInfo processInfo] systemUptime];
-        double time_now = lateast_imu_time;
+        double time_now = this->lateast_imu_time;
         double time_vins = vins.Headers[WINDOW_SIZE];
         __android_log_print(ANDROID_LOG_INFO, APPNAME, "vins delay %lf", time_now - time_vins);
 
         //update feature position for front-end
         if(vins.solver_flag == vins.NON_LINEAR)
         {
-            m_depth_feedback.lock();
+            this->m_depth_feedback.lock();
             solved_vins.header = vins.Headers[WINDOW_SIZE - 1];
             solved_vins.Ba = vins.Bas[WINDOW_SIZE - 1];
             solved_vins.Bg = vins.Bgs[WINDOW_SIZE - 1];
@@ -620,7 +620,7 @@ void ViewController::process() {
                 tmp_feature.track_num = (int)it_per_id.feature_per_frame.size();
                 solved_features.push_back(tmp_feature);
             }
-            m_depth_feedback.unlock();
+            this->m_depth_feedback.unlock();
         }
 
         if(this->imageCacheEnabled)
@@ -1279,7 +1279,7 @@ void ViewController::showInputView() {
     viewUpdateMutex.unlock();
 }
 
-NSTimeInterval ViewController::getLateast_imu_time() const { return lateast_imu_time; }
+NSTimeInterval ViewController::getLateast_imu_time() const { return this->lateast_imu_time; }
 
 void ViewController::switchUI(bool isChecked) {
     if(isChecked) {
@@ -1289,7 +1289,7 @@ void ViewController::switchUI(bool isChecked) {
         ui_main = true;
         box_in_AR = true;
         USE_PNP = true;
-        imageCacheEnabled = cameraMode && !USE_PNP;
+        this->imageCacheEnabled = cameraMode && !USE_PNP;
     } else {
         // self.switchUIAREnabled = NO;
 
@@ -1297,7 +1297,7 @@ void ViewController::switchUI(bool isChecked) {
         if (box_in_AR)
             box_in_trajectory = true;
         USE_PNP = false;
-        imageCacheEnabled = cameraMode && !USE_PNP;
+        this->imageCacheEnabled = cameraMode && !USE_PNP;
         printf("show VINS\n");
     }
 }

@@ -111,9 +111,9 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
         setContentView(R.layout.activity_main);
         
         // first make sure the necessary permissions are given
-        checkPermissionsIfNeccessary();
+        this.checkPermissionsIfNeccessary();
         
-        if(!checkBriefFileExistance()) {
+        if(!this.checkBriefFileExistance()) {
             Log.e(TAG, "Brief files not found here: " + directoryPathBriefFiles);
             finish();
         }
@@ -235,7 +235,7 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
 
             // check permissions
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-                checkPermissionsIfNeccessary();
+                this.checkPermissionsIfNeccessary();
                 return;
             }
             
