@@ -386,8 +386,7 @@ void ViewController::processImage(cv::Mat &image, double timeStamp, bool isScree
 //            TS(vins_draw);
             // You should'nt get here if this is false
             assert(vins.solver_flag == VINS::NON_LINEAR);
-            if (vins.solver_flag == VINS::NON_LINEAR)
-            {
+            if (vins.solver_flag == VINS::NON_LINEAR) {     //初始化完成,绘制云点和网格啥的
                 vins.drawresult.pose.clear();
                 vins.drawresult.pose = keyframe_database.refine_path;
                 vins.drawresult.segment_indexs = keyframe_database.segment_indexs;
@@ -408,6 +407,7 @@ void ViewController::processImage(cv::Mat &image, double timeStamp, bool isScree
             cv::Mat tmp2 = vins.image_show;
 //            TE(vins_draw);
 
+            //左下角mat
             cv::Mat down_origin_image;
 //            TS(Window_resize); // 0.65ms
             cv::resize(image, down_origin_image, cv::Size(150, 200));
@@ -429,6 +429,7 @@ void ViewController::processImage(cv::Mat &image, double timeStamp, bool isScree
             
 //            TS(smallWindow_into_big);
             cv::Mat imageROI;
+            //左下角显示的矩阵
             imageROI = tmp2(cv::Rect(10,COL - down_origin_image.rows- 10, down_origin_image.cols,down_origin_image.rows));
 //            cv::Mat mask;
 //            cv::cvtColor(down_origin_image, mask, CV_RGB2GRAY);
@@ -439,6 +440,7 @@ void ViewController::processImage(cv::Mat &image, double timeStamp, bool isScree
 //            LOGI("before rows: %d, cols: %d", image.rows, image.cols);
 
 //            TS(big_Window_rotate); // 4.79ms
+            //将vins里的mat添加了左下角的视频mat后，赋值给输入img
             cv::rotate(tmp2, image, cv::ROTATE_90_CLOCKWISE);
 //            TE(big_Window_rotate);
             
