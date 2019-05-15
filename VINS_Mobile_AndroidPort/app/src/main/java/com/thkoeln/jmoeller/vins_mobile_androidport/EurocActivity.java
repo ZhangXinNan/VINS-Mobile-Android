@@ -6,22 +6,22 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.graphics.ImageFormat;
 import android.graphics.SurfaceTexture;
-import android.hardware.camera2.CameraAccessException;
-import android.hardware.camera2.CameraCaptureSession;
-import android.hardware.camera2.CameraCharacteristics;
-import android.hardware.camera2.CameraDevice;
-import android.hardware.camera2.CameraManager;
-import android.hardware.camera2.CaptureRequest;
-import android.hardware.camera2.params.StreamConfigurationMap;
+//import android.hardware.camera2.CameraAccessException;
+//import android.hardware.camera2.CameraCaptureSession;
+//import android.hardware.camera2.CameraCharacteristics;
+//import android.hardware.camera2.CameraDevice;
+//import android.hardware.camera2.CameraManager;
+//import android.hardware.camera2.CaptureRequest;
 import android.media.Image;
 import android.media.ImageReader;
+import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.util.Log;
 import android.util.Range;
 import android.util.Rational;
@@ -34,37 +34,42 @@ import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.Switch;
 import android.widget.TextView;
+import android.widget.Toast;
+import android.widget.VideoView;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * {@link MainActivity} only activity
+ * {@link EurocActivity} only activity
  * manages camera input, texture output
  * textViews and buttons
  */
-public class MainActivity extends AppCompatActivity implements TextureView.SurfaceTextureListener {
+public class EurocActivity extends AppCompatActivity implements TextureView.SurfaceTextureListener {
 
-    private static final String TAG = "MainActivity";
+    private static final String TAG = "EurocActivity";
+    private String video_path;
+    private String video_filename = "data/EuRoc_extract.MH_01_easy/cam0_image_raw.avi";
+    private VideoView videoView;
 
     // needed for permission request callback
     private static final int PERMISSIONS_REQUEST_CODE = 12345;
 
     // camera2 API Camera
-    private CameraDevice camera;
+//    private CameraDevice camera;
     // Back cam, 1 would be the front facing one
-    private String cameraID = "0";
+//    private String cameraID = "0";
 
     // Texture View to display the camera picture, or the vins output
-    private TextureView textureView;
+//    private TextureView textureView;
     private Size previewSize;
-    private CaptureRequest.Builder previewBuilder;
+//    private CaptureRequest.Builder previewBuilder;
     private ImageReader imageReader;
 
     // Handler for Camera Thread
-    private Handler handler;
-    private HandlerThread threadHandler;
+//    private Handler handler;
+//    private HandlerThread threadHandler;
 
     // Cam parameters
     private final int imageWidth = 640;
@@ -79,7 +84,7 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
     private Surface surface;
     
     // JNI Object
-    private VinsJNI vinsJNI;
+//    private VinsJNI vinsJNI;
 
     // TextViews
     private TextView tvX;
@@ -91,7 +96,7 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
     private TextView tvBuf;
     
     // ImageView for initialization instructions
-    private ImageView ivInit;
+//    private ImageView ivInit;
 
     // directory path for BRIEF config files
     private final String directoryPathBriefFiles = "/storage/emulated/0/VINS";
@@ -108,18 +113,23 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_euroc);
+
+        this.videoView = (VideoView) findViewById(R.id.video_view);
         
         // first make sure the necessary permissions are given
-        checkPermissionsIfNeccessary();
+        this.checkPermissionsIfNeccessary();
         
         if(!checkBriefFileExistance()) {
+            Toast.makeText(this, "Brief files not found here" + directoryPathBriefFiles, Toast.LENGTH_SHORT);
             Log.e(TAG, "Brief files not found here: " + directoryPathBriefFiles);
             finish();
         }
+
+        this.videoView.start();
         
-        initLooper();
-        initVINS();
+//        initLooper();
+//        initVINS();
         initViews();
     }
 
@@ -156,20 +166,20 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
     /**
      * Starting separate thread to handle camera input
      */
-    private void initLooper() {
-        threadHandler = new HandlerThread("Camera2Thread");
-        threadHandler.start();
-        handler = new Handler(threadHandler.getLooper());
-    }
+//    private void initLooper() {
+//        threadHandler = new HandlerThread("Camera2Thread");
+//        threadHandler.start();
+//        handler = new Handler(threadHandler.getLooper());
+//    }
 
     /**
      * initializes an new VinsJNI Object
      */
-    private void initVINS() {
-        vinsJNI = new VinsJNI();
-        vinsJNI.init();
-    }
-    
+//    private void initVINS() {
+//        vinsJNI = new VinsJNI();
+//        vinsJNI.init();
+//    }
+//
     /**
      * Finding all UI Elements,
      * Setting TextureView Listener to this object.
@@ -182,46 +192,45 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
         tvLoop = (TextView) findViewById(R.id.loop_Label);
         tvFeature = (TextView) findViewById(R.id.feature_Label);
         tvBuf = (TextView) findViewById(R.id.buf_Label);
-        
-        ivInit = (ImageView) findViewById(R.id.init_image_view); 
+//
+//        ivInit = (ImageView) findViewById(R.id.init_image_view);
 //        ivInit.setVisibility(View.VISIBLE);
-        ivInit.setVisibility(View.INVISIBLE);
 
-        textureView = (TextureView) findViewById(R.id.texture_view);
-        textureView.setSurfaceTextureListener(this);
+//        textureView = (TextureView) findViewById(R.id.texture_view);
+//        textureView.setSurfaceTextureListener(this);
 
         // Define the Switch listeners
-        Switch arSwitch = (Switch) findViewById(R.id.ar_switch);
-        arSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                Log.d(TAG,"arSwitch State = " + isChecked);
-                VinsJNI.onARSwitch(isChecked);
-            }
-        });
+//        Switch arSwitch = (Switch) findViewById(R.id.ar_switch);
+//        arSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+//            @Override
+//            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+//                Log.d(TAG,"arSwitch State = " + isChecked);
+//                VinsJNI.onARSwitch(isChecked);
+//            }
+//        });
         
-        Switch loopSwitch = (Switch) findViewById(R.id.loop_switch);
-        loopSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                Log.d(TAG,"loopSwitch State = " + isChecked);
-                VinsJNI.onLoopSwitch(isChecked);
-            }
-        });
+//        Switch loopSwitch = (Switch) findViewById(R.id.loop_switch);
+//        loopSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+//            @Override
+//            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+//                Log.d(TAG,"loopSwitch State = " + isChecked);
+//                VinsJNI.onLoopSwitch(isChecked);
+//            }
+//        });
 
-        SeekBar zoomSlider = (SeekBar) findViewById(R.id.zoom_slider);
-        zoomSlider.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                virtualCamDistance = minVirtualCamDistance + ((float)progress / 100) * (maxVirtualCamDistance - minVirtualCamDistance);
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {  }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {  }
-        });
+//        SeekBar zoomSlider = (SeekBar) findViewById(R.id.zoom_slider);
+//        zoomSlider.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+//            @Override
+//            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+//                virtualCamDistance = minVirtualCamDistance + ((float)progress / 100) * (maxVirtualCamDistance - minVirtualCamDistance);
+//            }
+//
+//            @Override
+//            public void onStartTrackingTouch(SeekBar seekBar) {  }
+//
+//            @Override
+//            public void onStopTrackingTouch(SeekBar seekBar) {  }
+//        });
     }
     
     /**
@@ -232,17 +241,18 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
     public void onSurfaceTextureAvailable(SurfaceTexture surface, int width,
                                           int height) {
         try {
-            CameraManager cameraManager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
+//            CameraManager cameraManager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
 
             // check permissions
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
                 checkPermissionsIfNeccessary();
                 return;
             }
-            
+
             // start up Camera (not the recording)
-            cameraManager.openCamera(cameraID, cameraDeviceStateCallback, handler);
-        } catch (CameraAccessException e) {
+//            cameraManager.openCamera(cameraID, cameraDeviceStateCallback, handler);
+//        } catch (CameraAccessException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -258,107 +268,107 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
     @Override
     public void onSurfaceTextureUpdated(SurfaceTexture surface) {}
 
-    private CameraDevice.StateCallback cameraDeviceStateCallback = new CameraDevice.StateCallback() {
-
-        @Override
-        public void onOpened(CameraDevice cameraDevice) {
-            try {
-                camera = cameraDevice;
-                startCameraView(camera);
-            } catch (CameraAccessException e) {
-                e.printStackTrace();
-            }
-        }
-
-        @Override
-        public void onDisconnected(CameraDevice camera) {}
-
-        @Override
-        public void onError(CameraDevice camera, int error) {}
-    };
+//    private CameraDevice.StateCallback cameraDeviceStateCallback = new CameraDevice.StateCallback() {
+//
+//        @Override
+//        public void onOpened(CameraDevice cameraDevice) {
+//            try {
+//                camera = cameraDevice;
+//                startCameraView(camera);
+//            } catch (CameraAccessException e) {
+//                e.printStackTrace();
+//            }
+//        }
+//
+//        @Override
+//        public void onDisconnected(CameraDevice camera) {}
+//
+//        @Override
+//        public void onError(CameraDevice camera, int error) {}
+//    };
 
     /**
      * starts CameraView
      */
-    private void startCameraView(CameraDevice camera) throws CameraAccessException {
-        SurfaceTexture texture = textureView.getSurfaceTexture();
-        
-        // to set CameraView size
-        texture.setDefaultBufferSize(textureView.getWidth(), textureView.getHeight());
-        Log.d(TAG, "texture width: " + textureView.getWidth() + " height: " + textureView.getHeight());
-        surface = new Surface(texture);
-                
-        try {
-            // to set request for CameraView
-            previewBuilder = camera.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
-        } catch (CameraAccessException e) {
-            e.printStackTrace();
-        }
-
-        // to set the format of captured images and the maximum number of images that can be accessed in mImageReader
-        imageReader = ImageReader.newInstance(imageWidth, imageHeight, ImageFormat.YUV_420_888, 1);
-
-        imageReader.setOnImageAvailableListener(onImageAvailableListener, handler);
-
-
-        CameraManager cameraManager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
-        CameraCharacteristics characteristics = cameraManager.getCameraCharacteristics(cameraID);
-        // get the StepSize of the auto exposure compensation
-        Rational aeCompStepSize = characteristics.get(CameraCharacteristics.CONTROL_AE_COMPENSATION_STEP);
-        if(aeCompStepSize == null) {
-            Log.e(TAG, "Camera doesn't support setting Auto-Exposure Compensation");
-            finish();
-        }
-        Log.d(TAG, "AE Compensation StepSize: " + aeCompStepSize);
-        
-        int aeCompensationInSteps = aeCompensation * aeCompStepSize.getDenominator() / aeCompStepSize.getNumerator();
-        Log.d(TAG, "aeCompensationInSteps: " + aeCompensationInSteps );
-        previewBuilder.set(CaptureRequest.CONTROL_AE_EXPOSURE_COMPENSATION, aeCompensationInSteps);
-        
-        // set the camera output frequency to 30Hz
-        previewBuilder.set(CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE, new Range<Integer>(framesPerSecond, framesPerSecond));
-        
-        // the first added target surface is for CameraView display
-        // the second added target mImageReader.getSurface() 
-        // is for ImageReader Callback where it can be access EACH frame
-        //mPreviewBuilder.addTarget(surface);
-        previewBuilder.addTarget(imageReader.getSurface());
-
-        //output Surface
-        List<Surface> outputSurfaces = new ArrayList<>();
-        outputSurfaces.add(imageReader.getSurface());
-        
-        
-        camera.createCaptureSession(outputSurfaces, sessionStateCallback, handler);
-    }
-
-    private CameraCaptureSession.StateCallback sessionStateCallback = new CameraCaptureSession.StateCallback() {
-        @Override
-        public void onConfigured(CameraCaptureSession session) {
-            try {
-                updateCameraView(session);
-            } catch (CameraAccessException e) {
-                e.printStackTrace();
-            }
-        }
-
-        @Override
-        public void onConfigureFailed(CameraCaptureSession session) {
-
-        }
-    };
+//    private void startCameraView(CameraDevice camera) throws CameraAccessException {
+//        SurfaceTexture texture = textureView.getSurfaceTexture();
+//
+//        // to set CameraView size
+//        texture.setDefaultBufferSize(textureView.getWidth(), textureView.getHeight());
+//        Log.d(TAG, "texture width: " + textureView.getWidth() + " height: " + textureView.getHeight());
+//        surface = new Surface(texture);
+//
+//        try {
+//            // to set request for CameraView
+//            previewBuilder = camera.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
+//        } catch (CameraAccessException e) {
+//            e.printStackTrace();
+//        }
+//
+//        // to set the format of captured images and the maximum number of images that can be accessed in mImageReader
+//        imageReader = ImageReader.newInstance(imageWidth, imageHeight, ImageFormat.YUV_420_888, 1);
+//
+//        imageReader.setOnImageAvailableListener(onImageAvailableListener, handler);
+//
+//
+//        CameraManager cameraManager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
+//        CameraCharacteristics characteristics = cameraManager.getCameraCharacteristics(cameraID);
+//        // get the StepSize of the auto exposure compensation
+//        Rational aeCompStepSize = characteristics.get(CameraCharacteristics.CONTROL_AE_COMPENSATION_STEP);
+//        if(aeCompStepSize == null) {
+//            Log.e(TAG, "Camera doesn't support setting Auto-Exposure Compensation");
+//            finish();
+//        }
+//        Log.d(TAG, "AE Compensation StepSize: " + aeCompStepSize);
+//
+//        int aeCompensationInSteps = aeCompensation * aeCompStepSize.getDenominator() / aeCompStepSize.getNumerator();
+//        Log.d(TAG, "aeCompensationInSteps: " + aeCompensationInSteps );
+//        previewBuilder.set(CaptureRequest.CONTROL_AE_EXPOSURE_COMPENSATION, aeCompensationInSteps);
+//
+//        // set the camera output frequency to 30Hz
+//        previewBuilder.set(CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE, new Range<Integer>(framesPerSecond, framesPerSecond));
+//
+//        // the first added target surface is for CameraView display
+//        // the second added target mImageReader.getSurface()
+//        // is for ImageReader Callback where it can be access EACH frame
+//        //mPreviewBuilder.addTarget(surface);
+//        previewBuilder.addTarget(imageReader.getSurface());
+//
+//        //output Surface
+//        List<Surface> outputSurfaces = new ArrayList<>();
+//        outputSurfaces.add(imageReader.getSurface());
+//
+//
+//        camera.createCaptureSession(outputSurfaces, sessionStateCallback, handler);
+//    }
+//
+//    private CameraCaptureSession.StateCallback sessionStateCallback = new CameraCaptureSession.StateCallback() {
+//        @Override
+//        public void onConfigured(CameraCaptureSession session) {
+//            try {
+//                updateCameraView(session);
+//            } catch (CameraAccessException e) {
+//                e.printStackTrace();
+//            }
+//        }
+//
+//        @Override
+//        public void onConfigureFailed(CameraCaptureSession session) {
+//
+//        }
+//    };
 
     /**
      * Starts the RepeatingRequest for 
      */
-    private void updateCameraView(CameraCaptureSession session)
-            throws CameraAccessException {
-//        previewBuilder.set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_AUTO);
-        previewBuilder.set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_VIDEO);
-
-        session.setRepeatingRequest(previewBuilder.build(), null, handler);
-    }
-    
+//    private void updateCameraView(CameraCaptureSession session)
+//            throws CameraAccessException {
+////        previewBuilder.set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_AUTO);
+//        previewBuilder.set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_VIDEO);
+//
+//        session.setRepeatingRequest(previewBuilder.build(), null, handler);
+//    }
+//
     /**
      *  At last the actual function with access to the image
      */
@@ -393,18 +403,18 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
             boolean isScreenRotated = currentRotation != Surface.ROTATION_90;
             
             // pass image to c++ part
-            VinsJNI.onImageAvailable(image.getWidth(), image.getHeight(), 
-                                     Y_rowStride, Y_plane.getBuffer(), 
-                                     UV_rowStride, U_plane.getBuffer(), V_plane.getBuffer(), 
-                                     surface, image.getTimestamp(), isScreenRotated,
-                                     virtualCamDistance);
+//            VinsJNI.onImageAvailable(image.getWidth(), image.getHeight(),
+//                                     Y_rowStride, Y_plane.getBuffer(),
+//                                     UV_rowStride, U_plane.getBuffer(), V_plane.getBuffer(),
+//                                     surface, image.getTimestamp(), isScreenRotated,
+//                                     virtualCamDistance);
 
             // run the updateViewInfo function on the UI Thread so it has permission to modify it
-            runOnUiThread(new Runnable() {
-                public void run() {
-                    VinsJNI.updateViewInfo(tvX, tvY, tvZ, tvTotal, tvLoop, tvFeature, tvBuf, ivInit);
-                }
-            });
+//            runOnUiThread(new Runnable() {
+//                public void run() {
+//                    VinsJNI.updateViewInfo(tvX, tvY, tvZ, tvTotal, tvLoop, tvFeature, tvBuf, ivInit);
+//                }
+//            });
 
             image.close();
         }
@@ -414,16 +424,16 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
      * shutting down onPause
      */
     protected void onPause() {
-        if (null != camera) {
-            camera.close();
-            camera = null;
-        }
+//        if (null != camera) {
+//            camera.close();
+//            camera = null;
+//        }
         if (null != imageReader) {
             imageReader.close();
             imageReader = null;
         }
         
-        VinsJNI.onPause();
+//        VinsJNI.onPause();
         
         super.onPause();
     }
@@ -445,6 +455,8 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
                     ActivityCompat.requestPermissions(this, permissionsNotGrantedYet.toArray(new String[permissionsNotGrantedYet.size()]),
                                                       PERMISSIONS_REQUEST_CODE);
                     return false;
+                } else {
+                    this.initVideoPath();
                 }
             }
         } catch (PackageManager.NameNotFoundException e) {
@@ -470,8 +482,17 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
             }
 
             if(!hasAllPermissions){
+                Toast.makeText(this, "拒绝权限将无法使用程序", Toast.LENGTH_SHORT);
                 finish();
+            } else {
+                this.initVideoPath();
             }
         }
+    }
+
+
+    private void initVideoPath() {
+        File file = new File(Environment.getExternalStorageDirectory(), this.video_filename);
+        this.videoView.setVideoPath(file.getPath());
     }
 }

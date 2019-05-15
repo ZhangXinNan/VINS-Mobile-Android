@@ -21,6 +21,11 @@ double TIC_X;
 double TIC_Y;
 double TIC_Z;
 
+double RIC_y = 0.0;
+double RIC_p = 0.0;
+double RIC_r = 180.0;
+
+
 bool setGlobalParam(DeviceType device)
 {
     switch (device) {
@@ -140,7 +145,28 @@ bool setGlobalParam(DeviceType device)
             TIC_Z = -0.01505; //-0.018792; // up when in landscape (right when normal)
             return true;
             break;
-            
+
+        case EuRoc:
+            printf("Device EuRoc param\n");
+            FOCUS_LENGTH_X = 461.6;
+            FOCUS_LENGTH_Y = 460.3;
+            PX = 363.0; // euroc_config.yaml cx
+            PY = 248.1; // euroc_config.yaml cy
+
+            SOLVER_TIME = 1.0; // 0.06 TODO
+            FREQ = 3;
+
+            //extrinsic param
+            // TIC = Translation IMU to Camera
+            TIC_X = -0.0216401454975; // view direction
+            TIC_Y = -0.064676986768; //-0.005 // to the left when device is in landscape (up when normal)
+            TIC_Z = 0.00981073058949; //-0.018792; // up when in landscape (right when normal)
+
+            RIC_y = 1.558236680721651 * 180 / 3.141592653;
+            RIC_p = 0.025392529572065 * 180 / 3.141592653;
+            RIC_r = 0.017907313396948 * 180 / 3.141592653;
+            return true;
+            break;
         case unDefine:
             return false;
             break;

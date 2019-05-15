@@ -162,8 +162,8 @@ Java_com_thkoeln_jmoeller_vins_1mobile_1androidport_VinsJNI_updateViewInfo(JNIEn
         env->CallVoidMethod(tvFeature, setTextID, env->NewStringUTF(viewControllerGlobal->tvFeatureText.c_str()));
         env->CallVoidMethod(tvBuf, setTextID, env->NewStringUTF(viewControllerGlobal->tvBufText.c_str()));
 
-        jint visibility = viewControllerGlobal->initImageVisible ? VISIBLE : INVISIBLE;
-        env->CallVoidMethod(ivInit, setVisibilityID, visibility);
+//        jint visibility = viewControllerGlobal->initImageVisible ? VISIBLE : INVISIBLE;
+//        env->CallVoidMethod(ivInit, setVisibilityID, visibility);
     }
     viewControllerGlobal->viewUpdateMutex.unlock();
 }

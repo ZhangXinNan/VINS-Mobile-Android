@@ -355,7 +355,7 @@ public:
     std::string tvTotalText{"TOTAL:"};
     std::string tvBufText;
     std::string tvLoopText{"LOOP:"};
-    bool initImageVisible = true;
+    bool initImageVisible = false; // true
     
     float virtualCamDistance = 5;
     
