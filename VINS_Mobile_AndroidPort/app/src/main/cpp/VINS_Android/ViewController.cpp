@@ -249,7 +249,7 @@ void ViewController::processImage(cv::Mat &image, double timeStamp, bool isScree
         // never used? prevTime = mach_absolute_time();
 
         cv::Mat gray;
-        cv::cvtColor(input_frame, gray, CV_RGBA2GRAY);
+        cv::cvtColor(input_frame, gray, cv::COLOR_RGBA2GRAY);
         cv::Mat img_with_feature;
         cv::Mat img_equa;
         cv::Ptr<cv::CLAHE> clahe = cv::createCLAHE();
@@ -361,14 +361,14 @@ void ViewController::processImage(cv::Mat &image, double timeStamp, bool isScree
                 vins.drawresult.startInit = true;
                 vins.drawresult.drawAR(vins.imageAI, vins.correct_point_cloud, lateast_P, lateast_R);
 
-                cv::cvtColor(image, tmp, CV_RGBA2RGB);
+                cv::cvtColor(image, tmp, cv::COLOR_RGBA2RGB);
                 cv::Mat mask;
                 cv::Mat imageAI = vins.imageAI;
                 if(!imageAI.empty())
-                    cv::cvtColor(imageAI, mask, CV_RGB2GRAY);
+                    cv::cvtColor(imageAI, mask, cv::COLOR_RGB2GRAY);
                 imageAI.copyTo(tmp,mask);
                                 
-                cv::cvtColor(tmp, image, CV_RGB2RGBA);
+                cv::cvtColor(tmp, image, cv::COLOR_RGB2RGBA);
                 if(isScreenRotated)
                     cv::rotate(image, image, cv::ROTATE_180);
             }
@@ -416,7 +416,7 @@ void ViewController::processImage(cv::Mat &image, double timeStamp, bool isScree
 //            LOGI("VISDEBUG down_origin_image rows: %d, cols: %d", down_origin_image.rows, down_origin_image.cols);
 
 //            TS(smallWindow_cvColor_rotate);
-            cv::cvtColor(down_origin_image, down_origin_image, CV_RGBA2RGB);
+            cv::cvtColor(down_origin_image, down_origin_image, cv::COLOR_RGBA2RGB);
 //            cv::flip(down_origin_image,down_origin_image,0);
             if (!isScreenRotated)
                 cv::rotate(down_origin_image, down_origin_image, cv::ROTATE_180);
@@ -438,7 +438,7 @@ void ViewController::processImage(cv::Mat &image, double timeStamp, bool isScree
 //            TE(big_Window_rotate);
             
 //            TS(big_Window_cvtColor);
-            cv::cvtColor(image, image, CV_RGB2RGBA);
+            cv::cvtColor(image, image, cv::COLOR_RGB2RGBA);
 //            TE(big_Window_cvtColor);
         }
         // prints information about how long the visualization took in ms
