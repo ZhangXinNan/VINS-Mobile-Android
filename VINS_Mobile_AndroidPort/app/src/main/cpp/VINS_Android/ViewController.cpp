@@ -923,7 +923,7 @@ int ViewController::process_imu_sensor_events(int fd, int events, void *data) {
 
 
         double timeStampGyro = timeStampToSec(gyroEvent.timestamp);
-//        LOGI("IMU gyro event timeStamp: %lf", timeStampGyro);
+        LOGI("IMU gyro event timeStamp: %lf", timeStampGyro);
         //The timestamp is the amount of time in seconds since the device booted.
         assert(timeStampGyro > 0);
 
