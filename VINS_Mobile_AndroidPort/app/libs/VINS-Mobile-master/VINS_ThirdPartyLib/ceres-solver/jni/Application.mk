@@ -26,7 +26,7 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-NDK_TOOLCHAIN_VERSION := 4.9
+# NDK_TOOLCHAIN_VERSION := 4.9
 
 APP_BUILD_SCRIPT := $(call my-dir)/Android.mk
 APP_PROJECT_PATH := $(call my-dir)
@@ -39,9 +39,9 @@ APP_OPTIM := release
 
 # Use libc++ from LLVM. It is a modern BSD licensed implementation of
 # the standard C++ library.
-# APP_STL := c++_static
-APP_STL := gnustl_static
+APP_STL := c++_static
+# APP_STL := gnustl_static
 # APP_ABI := armeabi-v7a # Original Value
 # APP_ABI := arm64-v8a armeabi-v7a x86 x86_64 # This equals the default of all non deprecated archs
-APP_ABI := arm64-v8a
-APP_PLATFORM := android-24
+APP_ABI := arm64-v8a armeabi-v7a
+APP_PLATFORM := android-26
