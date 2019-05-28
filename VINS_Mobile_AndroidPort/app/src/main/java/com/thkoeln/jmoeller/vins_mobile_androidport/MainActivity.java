@@ -65,7 +65,7 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
 
     // Handler for Camera Thread
     private Handler handler;
-    private HandlerThread threadHandler;
+//    private HandlerThread threadHandler;
 
     // Cam parameters
     private final int imageWidth = 640;
@@ -113,8 +113,10 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
         Log.i(TAG, "CPU ABI: " + android.os.Build.CPU_ABI);
         
         // first make sure the necessary permissions are given
-        checkPermissionsIfNeccessary();
-        
+//        checkPermissionsIfNeccessary();
+        if (!this.checkPermissionsIfNeccessary()) {
+            Log.d(TAG, "permission art not given");
+        }
         if(!checkBriefFileExistance()) {
             Log.e(TAG, "Brief files not found here: " + directoryPathBriefFiles);
             finish();
@@ -159,8 +161,10 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
      * Starting separate thread to handle camera input
      */
     private void initLooper() {
-        threadHandler = new HandlerThread("Camera2Thread");
+        HandlerThread threadHandler = new HandlerThread("Camera2Thread");
+        // 启动线程
         threadHandler.start();
+        // 将HandlerThread绑定的Looper对象传递给Handler作为参数，构建一个异步的Handler对象
         handler = new Handler(threadHandler.getLooper());
     }
 
@@ -234,6 +238,7 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
     public void onSurfaceTextureAvailable(SurfaceTexture surface, int width,
                                           int height) {
         try {
+            // 获取CameraManager 实例
             CameraManager cameraManager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
 
             // check permissions
@@ -241,7 +246,8 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
                 checkPermissionsIfNeccessary();
                 return;
             }
-            
+
+            // 打开指定的相机设备。handler由initLooper()创建。
             // start up Camera (not the recording)
             cameraManager.openCamera(cameraID, cameraDeviceStateCallback, handler);
         } catch (CameraAccessException e) {
@@ -289,7 +295,7 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
         texture.setDefaultBufferSize(textureView.getWidth(), textureView.getHeight());
         Log.d(TAG, "texture width: " + textureView.getWidth() + " height: " + textureView.getHeight());
         surface = new Surface(texture);
-                
+
         try {
             // to set request for CameraView
             previewBuilder = camera.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
