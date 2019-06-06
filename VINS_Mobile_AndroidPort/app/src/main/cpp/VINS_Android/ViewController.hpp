@@ -144,7 +144,7 @@ private:
 
 /*************************** Save data for debug ***************************/
 
-    bool start_record = false;
+    bool start_record = true;
 
     bool start_playback = false;
 
@@ -257,7 +257,7 @@ private:
 // MotionManager for read imu data
     // IMU Things:
     const int LOOPER_ID_USER = 3;
-    const int SENSOR_REFRESH_RATE_HZ = 100;
+    const int SENSOR_REFRESH_RATE_HZ = 50; // 100
     const int32_t SENSOR_REFRESH_PERIOD_US = int32_t(1000000 / SENSOR_REFRESH_RATE_HZ);
 
     static ASensorEventQueue *accelerometerEventQueue;
@@ -878,6 +878,10 @@ public:
 
         [msgData writeToFile:filePath atomically:YES];
         */
+        std::string img_path = "";
+        img_path += std::to_string(image_data.header) + ".jpg";
+        bool ret = cv::imwrite(img_path, image_data.image);
+        LOGI("%s, %d, %d, %d", img_path.c_str(), ret, image_data.image.rows, image_data.image.cols);
     }
 
     /**

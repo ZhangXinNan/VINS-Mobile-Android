@@ -15,12 +15,14 @@ import android.hardware.camera2.CaptureRequest;
 import android.hardware.camera2.params.StreamConfigurationMap;
 import android.media.Image;
 import android.media.ImageReader;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -37,6 +39,7 @@ import android.widget.Switch;
 import android.widget.TextView;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -71,7 +74,7 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
     private final int imageWidth = 640;
     private final int imageHeight = 480;
     
-    private final int framesPerSecond = 30;
+    private final int framesPerSecond = 30; // 30
     
     /** Adjustment to auto-exposure (AE) target image brightness in EV */
     private final int aeCompensation = 0;
@@ -406,6 +409,14 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
                                      UV_rowStride, U_plane.getBuffer(), V_plane.getBuffer(), 
                                      surface, image.getTimestamp(), isScreenRotated,
                                      virtualCamDistance);
+
+//            File outputImage = new File(getExternalCacheDir(), image.getTimestamp() + ".jpg");
+//            try {
+//                outputImage.createNewFile();
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
+//            Uri imageUri = FileProvider.getUriForFile(MainActivity.this, "com.thkoeln.jmoeller.vins_mobile_androidport.fileprovider");
 
             // run the updateViewInfo function on the UI Thread so it has permission to modify it
             runOnUiThread(new Runnable() {

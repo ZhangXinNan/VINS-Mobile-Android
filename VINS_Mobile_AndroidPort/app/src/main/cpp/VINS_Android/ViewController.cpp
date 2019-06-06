@@ -228,23 +228,22 @@ void ViewController::processImage(cv::Mat &image, double timeStamp, bool isScree
             input_frame = image;
         /*}*/
 
-        /*
         if(start_record)
         {
-            LOGE("Recording isn't supported yet");
+//            LOGE("Recording isn't supported yet");
             imgData.header = img_msg->header;
             imgData.image = image; // imgData.image = MatToUIImage(image);
             imgDataBuf.push(imgData);
-            return;
+//            return;
         }
         else
-        {*/
+        {
             // terminate method if buffer isn't empty but recording isn't enabled either
             if(!imgDataBuf.empty()){
                 LOGI("!imgDataBuf.empty(), abort processImage()");
                 return;
             }
-        /*}*/
+        }
 
         // never used? prevTime = mach_absolute_time();
 
@@ -252,6 +251,8 @@ void ViewController::processImage(cv::Mat &image, double timeStamp, bool isScree
         cv::cvtColor(input_frame, gray, cv::COLOR_RGBA2GRAY);
         cv::Mat img_with_feature;
         cv::Mat img_equa;
+        // Contrast Limited Adaptive histgram equalization/CLAHE
+        // 限制对比度自适应直方图均衡
         cv::Ptr<cv::CLAHE> clahe = cv::createCLAHE();
         clahe->setClipLimit(3);
         clahe->apply(gray, img_equa);
