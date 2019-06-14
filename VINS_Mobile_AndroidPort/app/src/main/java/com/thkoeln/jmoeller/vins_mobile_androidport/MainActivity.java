@@ -37,10 +37,14 @@ import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.Switch;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -74,7 +78,7 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
     private final int imageWidth = 640;
     private final int imageHeight = 480;
     
-    private final int framesPerSecond = 30; // 30
+    private final int framesPerSecond = 25; // 30
     
     /** Adjustment to auto-exposure (AE) target image brightness in EV */
     private final int aeCompensation = 0;
@@ -105,7 +109,6 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
     private float virtualCamDistance = 2;
     private final float minVirtualCamDistance = 2;
     private final float maxVirtualCamDistance = 40;
-
     /**
      * Gets Called after App start
      */
@@ -175,8 +178,14 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
      * initializes an new VinsJNI Object
      */
     private void initVINS() {
+        File storageDir = new File("/sdcard/0/", "vins");
+        final DateFormat dateFormat = new SimpleDateFormat("yyyy_MM_dd-HH_mm_ss");
+        final File saveDataDir = new File(storageDir, dateFormat.format(new Date(System.currentTimeMillis())));
+        boolean bMkdirs = saveDataDir.mkdirs();
+        Log.i(TAG, saveDataDir.toString() + " 创建 " + bMkdirs);
+        Toast.makeText(MainActivity.this, saveDataDir.toString() + " 创建" + bMkdirs, Toast.LENGTH_SHORT);
         vinsJNI = new VinsJNI();
-        vinsJNI.init();
+        vinsJNI.init(saveDataDir.toString());
     }
     
     /**
@@ -409,14 +418,6 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
                                      UV_rowStride, U_plane.getBuffer(), V_plane.getBuffer(), 
                                      surface, image.getTimestamp(), isScreenRotated,
                                      virtualCamDistance);
-
-//            File outputImage = new File(getExternalCacheDir(), image.getTimestamp() + ".jpg");
-//            try {
-//                outputImage.createNewFile();
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            }
-//            Uri imageUri = FileProvider.getUriForFile(MainActivity.this, "com.thkoeln.jmoeller.vins_mobile_androidport.fileprovider");
 
             // run the updateViewInfo function on the UI Thread so it has permission to modify it
             runOnUiThread(new Runnable() {

@@ -20,11 +20,15 @@ std::unique_ptr<ViewController> viewControllerGlobal;
 
 extern "C"
 JNIEXPORT void JNICALL
-Java_com_thkoeln_jmoeller_vins_1mobile_1androidport_VinsJNI_init(JNIEnv *env, jobject instance) {
+Java_com_thkoeln_jmoeller_vins_1mobile_1androidport_VinsJNI_init(JNIEnv *env, jobject instance, jstring saveDataDir) {
     
     viewControllerGlobal = std::unique_ptr<ViewController>(new ViewController);
     LOGI("Successfully created Viewcontroller Object");
-    
+
+    char* str = (char*)env->GetStringUTFChars(saveDataDir, NULL);
+    LOGI(str);
+    viewControllerGlobal->setSaveDataDir(str);
+    env->ReleaseStringUTFChars(saveDataDir, str);
     viewControllerGlobal->testMethod();
     
     // startup method of ViewController

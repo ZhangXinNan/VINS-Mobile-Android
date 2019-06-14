@@ -3,6 +3,8 @@
 ViewController* ViewController::instance = nullptr;
 ASensorEventQueue* ViewController::accelerometerEventQueue = nullptr;
 ASensorEventQueue* ViewController::gyroscopeEventQueue = nullptr;
+queue<IMU_DATA> ViewController::imuDataBufAcc;
+queue<IMU_DATA> ViewController::imuDataBufGyr;
 
 NSTimeInterval ViewController::systemUptime() {
     struct timespec time;
@@ -13,10 +15,33 @@ NSTimeInterval ViewController::systemUptime() {
 ViewController::ViewController() {
     LOGI("ViewController Constructor");
     this->instance = this;
+    
+    this->saveVideoTimePath = this->saveDataDir + "frame.txt";
+    this->ofsSaveDataFrame.open(this->saveVideoTimePath, ofstream::out);
+    LOGI("%s ofsSaveDataFrame.open", this->saveVideoTimePath.c_str());
+
+    this->saveVideoPath = this->saveDataDir + "video.avi";
+    int ret = this->videoWriter.open(this->saveVideoPath, cv::VideoWriter::fourcc('M','J','P','G'), framesPerSecond, cv::Size(videoWidth, videoHeight), true);
+    LOGI("%s VideoWriter.open %d", this->saveVideoPath.c_str(), ret);
+
+//    ViewController::saveImuPathAcc = this->saveDataDir + "acc.txt";
+//    ViewController::saveImuPathGyr = this->saveDataDir + "gyr.txt";
+//    ViewController::ofsSaveDataAcc.open(this->saveImuPathAcc, ofstream::out); //  | ofstream::app
+//    ViewController::ofsSaveDataGyr.open(this->saveImuPathGyr, ofstream::out); //  | ofstream::app
+    this->saveImuPathAcc = this->saveDataDir + "acc.txt";
+    this->saveImuPathGyr = this->saveDataDir + "gyr.txt";
+    this->ofsSaveDataAcc.open(this->saveImuPathAcc, ofstream::out); //  | ofstream::app
+    this->ofsSaveDataGyr.open(this->saveImuPathGyr, ofstream::out); //  | ofstream::app
 }
 
 ViewController::~ViewController() {
     LOGI("ViewController Destructor");
+
+    this->ofsSaveDataFrame.close();
+//    ViewController::ofsSaveDataAcc.close();
+//    ViewController::ofsSaveDataGyr.close();
+    this->ofsSaveDataAcc.close();
+    this->ofsSaveDataGyr.close();
 }
 
 void ViewController::viewDidLoad() {
@@ -83,6 +108,7 @@ void ViewController::viewDidLoad() {
     // [mainLoop setName:@"mainLoop"];
 
     saveData = std::thread(&ViewController::saveDataLoop, this);
+    saveDataImu = std::thread(&ViewController::saveDataLoopImu, this);
     // TODO: move further down
 //        saveData=[[NSThread alloc]initWithTarget:self selector:@selector(saveData) object:nil];
 //        [saveData setName:@"saveData"];
@@ -924,7 +950,7 @@ int ViewController::process_imu_sensor_events(int fd, int events, void *data) {
 
 
         double timeStampGyro = timeStampToSec(gyroEvent.timestamp);
-        LOGI("IMU gyro event timeStamp: %lf", timeStampGyro);
+//        LOGI("IMU gyro event timeStamp: %lf", timeStampGyro);
         //The timestamp is the amount of time in seconds since the device booted.
         assert(timeStampGyro > 0);
 
@@ -934,7 +960,12 @@ int ViewController::process_imu_sensor_events(int fd, int events, void *data) {
         gyro_msg.gyr << gyroEvent.uncalibrated_gyro.x_uncalib, //latestGyro.rotationRate.x,
                         gyroEvent.uncalibrated_gyro.y_uncalib, //latestGyro.rotationRate.y,
                         gyroEvent.uncalibrated_gyro.z_uncalib; //latestGyro.rotationRate.z;
-                
+
+//        std::string content = std::to_string(timeStampGyro) + " " + std::to_string(gyroEvent.uncalibrated_gyro.x_uncalib) + " " + std::to_string(gyroEvent.uncalibrated_gyro.y_uncalib) + " " + std::to_string(gyroEvent.uncalibrated_gyro.z_uncalib) + "\n";
+//        ofsSaveDataGyr << content;
+        IMU_DATA imuData(timeStampGyro, gyroEvent.uncalibrated_gyro.x_uncalib, gyroEvent.uncalibrated_gyro.y_uncalib, gyroEvent.uncalibrated_gyro.z_uncalib);
+        ViewController::imuDataBufGyr.push(imuData);
+
         if(instance->gyro_buf.size() == 0) {
             LOGI("gyro interpolation buffer empty. should only happen once.");
             instance->gyro_buf.push_back(gyro_msg);
@@ -967,6 +998,10 @@ int ViewController::process_imu_sensor_events(int fd, int events, void *data) {
             assert(acclEvent.type == ASENSOR_TYPE_ACCELEROMETER);
 
             acclEventTimestamp = timeStampToSec(acclEvent.timestamp);
+//            std::string content = std::to_string(acclEventTimestamp) + " " + std::to_string(acclEvent.acceleration.x) + " " + std::to_string(acclEvent.acceleration.y) + " " + std::to_string(acclEvent.acceleration.z) + "\n";
+//            ofsSaveDataAcc << content;
+            IMU_DATA imu_data(acclEventTimestamp, acclEvent.acceleration.x, acclEvent.acceleration.y, acclEvent.acceleration.z);
+            ViewController::imuDataBufAcc.push(imu_data);
             
 //            LOGI("IMU accl event timeStamp: %lf", timeStampAccl);
             shared_ptr<IMU_MSG> acc_msg(new IMU_MSG());
@@ -983,7 +1018,8 @@ int ViewController::process_imu_sensor_events(int fd, int events, void *data) {
             LOGE("having to wait for fitting gyro event"); // This should not happen if the frequency is the same
             continue;
         }
-
+//        ViewController::ofsSaveDataGyr.flush();
+//        ViewController::ofsSaveDataAcc.flush();
 
         //interpolation
         shared_ptr<IMU_MSG> imu_msg(new IMU_MSG());
@@ -1044,7 +1080,7 @@ void ViewController::saveDataLoop() {
 //            {
         if(!imgDataBuf.empty())
         {
-            LOGI("saveDataLoop: Trying to save something");
+//            LOGI("saveDataLoop: Trying to save something");
             IMG_DATA tmp_data;
             tmp_data = imgDataBuf.front();
             imgDataBuf.pop();
@@ -1057,6 +1093,26 @@ void ViewController::saveDataLoop() {
         std::this_thread::sleep_for(std::chrono::milliseconds(40)); // [NSThread sleepForTimeInterval:0.04];
     }
 }
+
+
+void ViewController::saveDataLoopImu() {
+    while(!saveData_isCancelled) {
+        if (!imuDataBufAcc.empty()) {
+//            LOGI("saveDataLoopImu: Trying to save acc");
+            IMU_DATA tmp_data(imuDataBufAcc.front());
+            ofsSaveDataAcc << tmp_data.toString() << "\n";
+            imuDataBufAcc.pop();
+        }
+        if (!imuDataBufGyr.empty()) {
+//            LOGI("saveDataLoopImu: Trying to save gyr");
+            IMU_DATA tmp_data(imuDataBufGyr.front());
+            ofsSaveDataGyr << tmp_data.toString() << "\n";
+            imuDataBufGyr.pop();
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(20));
+    }
+}
+
 
 DeviceType ViewController::deviceName() {
 //DeviceType deviceName()
