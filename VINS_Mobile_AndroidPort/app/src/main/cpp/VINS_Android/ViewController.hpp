@@ -69,6 +69,16 @@ extern "C" {
 
 //- (void)setVisibleAnimated:(BOOL)visible;
 
+struct IMU_DATA{
+    IMU_DATA(const IMU_DATA& d): header(d.header), x(d.x), y(d.y), z(d.z){}
+    IMU_DATA(NSTimeInterval t, double x, double y, double z): header(t), x(x), y(y), z(z){}
+    NSTimeInterval header;
+    double x, y, z;
+    std::string toString(){
+        return std::to_string(header) + " " + std::to_string(x) + " " + std::to_string(y) + " " + std::to_string(z);
+    }
+};
+
 struct IMU_MSG {
     NSTimeInterval header;
     Vector3d acc;
@@ -120,6 +130,7 @@ private:
     std::thread mainLoop;          // NSThread *mainLoop;
     std::thread draw;              // NSThread *draw;
     std::thread saveData;          // NSThread *saveData;
+    std::thread saveDataImu;
     std::thread loop_thread;       // NSThread *loop_thread;
     std::thread globalLoopThread;  // NSThread *globalLoopThread;
 //UITextView *textY;
@@ -144,7 +155,7 @@ private:
 
 /*************************** Save data for debug ***************************/
 
-    bool start_record = false;
+    bool start_record = true;
 
     bool start_playback = false;
 
@@ -180,6 +191,24 @@ private:
     KEYFRAME_DATA vinsData;
 
 /*************************** Save data for debug ***************************/
+
+    std::string saveDataDir = "/sdcard/0/vins/";
+    std::string saveVideoTimePath;
+    std::ofstream ofsSaveDataFrame;
+    std::string saveVideoPath;
+    cv::VideoWriter videoWriter;
+    int framesPerSecond = 25; // 30
+
+//    static std::string saveImuPathAcc;
+//    static std::string saveImuPathGyr;
+//    static std::ofstream ofsSaveDataAcc;
+//    static std::ofstream ofsSaveDataGyr;
+
+    std::string saveImuPathAcc;
+    std::string saveImuPathGyr;
+    std::ofstream ofsSaveDataAcc;
+    std::ofstream ofsSaveDataGyr;
+    static queue<IMU_DATA> imuDataBufAcc, imuDataBufGyr;
 
 /******************************* UI CONFIG *******************************/
 
@@ -257,7 +286,7 @@ private:
 // MotionManager for read imu data
     // IMU Things:
     const int LOOPER_ID_USER = 3;
-    const int SENSOR_REFRESH_RATE_HZ = 100;
+    const int SENSOR_REFRESH_RATE_HZ = 50; // 100
     const int32_t SENSOR_REFRESH_PERIOD_US = int32_t(1000000 / SENSOR_REFRESH_RATE_HZ);
 
     static ASensorEventQueue *accelerometerEventQueue;
@@ -355,7 +384,7 @@ public:
     std::string tvTotalText{"TOTAL:"};
     std::string tvBufText;
     std::string tvLoopText{"LOOP:"};
-    bool initImageVisible = true;
+    bool initImageVisible = false; // true
     
     float virtualCamDistance = 5;
     
@@ -763,6 +792,10 @@ public:
     //TODO: solve quick fix
     bool saveData_isCancelled = false;
     void saveDataLoop();
+    void saveDataLoopImu();
+    inline void setSaveDataDir(const string& path) {
+        this->saveDataDir = path + "/";
+    }
 
     void tapSaveImageToIphone(cv::Mat* image) {
     //- (void)tapSaveImageToIphone:(UIImage*)image
@@ -859,6 +892,13 @@ public:
 
         [msgData writeToFile:filePath atomically:YES];
         */
+//        LOGI("recordImageTime : %f %s", image_data.header, this->saveVideoTimePath.c_str());
+        this->ofsSaveDataFrame << std::to_string(image_data.header) + "\n";
+        this->ofsSaveDataFrame.flush();
+//        std::ofstream ofs;
+//        ofs.open(this->saveVideoTimePath, ios::in | ios::app);
+//        ofs << std::to_string(image_data.header) + "\n";
+//        ofs.close();
     }
 
     void recordImage(IMG_DATA& image_data) {
@@ -878,6 +918,11 @@ public:
 
         [msgData writeToFile:filePath atomically:YES];
         */
+//        std::string img_path = this->saveDataDir + std::to_string(image_data.header) + ".jpg";
+//        bool ret = cv::imwrite(img_path, image_data.image);
+//        LOGI("%s, %d, %d, %d", img_path.c_str(), ret, image_data.image.rows, image_data.image.cols);
+        this->videoWriter.write(image_data.image);
+//        LOGI("recordImage:  %d, %d, %s, %d", image_data.image.rows, image_data.image.cols, this->saveVideoPath.c_str(), this->videoWriter.isOpened());
     }
 
     /**

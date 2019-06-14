@@ -15,11 +15,14 @@ import android.hardware.camera2.CaptureRequest;
 import android.hardware.camera2.params.StreamConfigurationMap;
 import android.media.Image;
 import android.media.ImageReader;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -34,9 +37,14 @@ import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.Switch;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.io.File;
+import java.io.IOException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -64,13 +72,13 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
 
     // Handler for Camera Thread
     private Handler handler;
-    private HandlerThread threadHandler;
+//    private HandlerThread threadHandler;
 
     // Cam parameters
     private final int imageWidth = 640;
     private final int imageHeight = 480;
     
-    private final int framesPerSecond = 30;
+    private final int framesPerSecond = 25; // 30
     
     /** Adjustment to auto-exposure (AE) target image brightness in EV */
     private final int aeCompensation = 0;
@@ -101,7 +109,6 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
     private float virtualCamDistance = 2;
     private final float minVirtualCamDistance = 2;
     private final float maxVirtualCamDistance = 40;
-
     /**
      * Gets Called after App start
      */
@@ -109,10 +116,13 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        Log.i(TAG, "CPU ABI: " + android.os.Build.CPU_ABI);
         
         // first make sure the necessary permissions are given
-        checkPermissionsIfNeccessary();
-        
+//        checkPermissionsIfNeccessary();
+        if (!this.checkPermissionsIfNeccessary()) {
+            Log.d(TAG, "permission art not given");
+        }
         if(!checkBriefFileExistance()) {
             Log.e(TAG, "Brief files not found here: " + directoryPathBriefFiles);
             finish();
@@ -157,8 +167,10 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
      * Starting separate thread to handle camera input
      */
     private void initLooper() {
-        threadHandler = new HandlerThread("Camera2Thread");
+        HandlerThread threadHandler = new HandlerThread("Camera2Thread");
+        // 启动线程
         threadHandler.start();
+        // 将HandlerThread绑定的Looper对象传递给Handler作为参数，构建一个异步的Handler对象
         handler = new Handler(threadHandler.getLooper());
     }
 
@@ -166,8 +178,14 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
      * initializes an new VinsJNI Object
      */
     private void initVINS() {
+        File storageDir = new File("/sdcard/0/", "vins");
+        final DateFormat dateFormat = new SimpleDateFormat("yyyy_MM_dd-HH_mm_ss");
+        final File saveDataDir = new File(storageDir, dateFormat.format(new Date(System.currentTimeMillis())));
+        boolean bMkdirs = saveDataDir.mkdirs();
+        Log.i(TAG, saveDataDir.toString() + " 创建 " + bMkdirs);
+        Toast.makeText(MainActivity.this, saveDataDir.toString() + " 创建" + bMkdirs, Toast.LENGTH_SHORT);
         vinsJNI = new VinsJNI();
-        vinsJNI.init();
+        vinsJNI.init(saveDataDir.toString());
     }
     
     /**
@@ -184,7 +202,8 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
         tvBuf = (TextView) findViewById(R.id.buf_Label);
         
         ivInit = (ImageView) findViewById(R.id.init_image_view); 
-        ivInit.setVisibility(View.VISIBLE);
+//        ivInit.setVisibility(View.VISIBLE);
+        ivInit.setVisibility(View.INVISIBLE);
 
         textureView = (TextureView) findViewById(R.id.texture_view);
         textureView.setSurfaceTextureListener(this);
@@ -231,6 +250,7 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
     public void onSurfaceTextureAvailable(SurfaceTexture surface, int width,
                                           int height) {
         try {
+            // 获取CameraManager 实例
             CameraManager cameraManager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
 
             // check permissions
@@ -238,7 +258,8 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
                 checkPermissionsIfNeccessary();
                 return;
             }
-            
+
+            // 打开指定的相机设备。handler由initLooper()创建。
             // start up Camera (not the recording)
             cameraManager.openCamera(cameraID, cameraDeviceStateCallback, handler);
         } catch (CameraAccessException e) {
@@ -286,7 +307,7 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
         texture.setDefaultBufferSize(textureView.getWidth(), textureView.getHeight());
         Log.d(TAG, "texture width: " + textureView.getWidth() + " height: " + textureView.getHeight());
         surface = new Surface(texture);
-                
+
         try {
             // to set request for CameraView
             previewBuilder = camera.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);

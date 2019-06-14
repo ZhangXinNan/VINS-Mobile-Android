@@ -18,12 +18,13 @@ enum DeviceType
     iPadPro97,
     iPadPro129,
     GalaxyS7,
+    EuRoc,
     unDefine
 };
 //extrinsic param
-#define RIC_y ((double)0.0)
-#define RIC_p ((double)0.0)
-#define RIC_r ((double)180.0)
+//#define RIC_y ((double)0.0)
+//#define RIC_p ((double)0.0)
+//#define RIC_r ((double)180.0)
 #define MIN_LOOP_NUM 22
 #define LOOP_FREQ 3
 #define WINDOW_SIZE 10
@@ -59,6 +60,10 @@ extern double FOCUS_LENGTH_X;
 extern double PX;
 extern double SOLVER_TIME;
 extern int FREQ;
+
+extern double RIC_y;
+extern double RIC_p;
+extern double RIC_r;
 
 //extrinsic param
 extern double TIC_X;

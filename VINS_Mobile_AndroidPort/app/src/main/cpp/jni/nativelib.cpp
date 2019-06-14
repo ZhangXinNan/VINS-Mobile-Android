@@ -20,11 +20,15 @@ std::unique_ptr<ViewController> viewControllerGlobal;
 
 extern "C"
 JNIEXPORT void JNICALL
-Java_com_thkoeln_jmoeller_vins_1mobile_1androidport_VinsJNI_init(JNIEnv *env, jobject instance) {
+Java_com_thkoeln_jmoeller_vins_1mobile_1androidport_VinsJNI_init(JNIEnv *env, jobject instance, jstring saveDataDir) {
     
     viewControllerGlobal = std::unique_ptr<ViewController>(new ViewController);
     LOGI("Successfully created Viewcontroller Object");
-    
+
+    char* str = (char*)env->GetStringUTFChars(saveDataDir, NULL);
+//    LOGI(str);
+    viewControllerGlobal->setSaveDataDir(str);
+    env->ReleaseStringUTFChars(saveDataDir, str);
     viewControllerGlobal->testMethod();
     
     // startup method of ViewController
@@ -162,8 +166,8 @@ Java_com_thkoeln_jmoeller_vins_1mobile_1androidport_VinsJNI_updateViewInfo(JNIEn
         env->CallVoidMethod(tvFeature, setTextID, env->NewStringUTF(viewControllerGlobal->tvFeatureText.c_str()));
         env->CallVoidMethod(tvBuf, setTextID, env->NewStringUTF(viewControllerGlobal->tvBufText.c_str()));
 
-        jint visibility = viewControllerGlobal->initImageVisible ? VISIBLE : INVISIBLE;
-        env->CallVoidMethod(ivInit, setVisibilityID, visibility);
+//        jint visibility = viewControllerGlobal->initImageVisible ? VISIBLE : INVISIBLE;
+//        env->CallVoidMethod(ivInit, setVisibilityID, visibility);
     }
     viewControllerGlobal->viewUpdateMutex.unlock();
 }

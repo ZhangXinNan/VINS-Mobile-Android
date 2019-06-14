@@ -15,7 +15,7 @@ public class VinsJNI implements Serializable {
     // Used to load the 'native-lib' library on application startup.
     static { System.loadLibrary("NativeLib"); }
     
-    public native void init();
+    public native void init(String saveDataDir);
     
     public static native void onImageAvailable(int width, int height, int rowStrideY, ByteBuffer bufferY, 
                                                int rowStrideUV, ByteBuffer bufferU, ByteBuffer bufferV, 
