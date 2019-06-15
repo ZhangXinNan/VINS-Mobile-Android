@@ -192,20 +192,10 @@ private:
 
 /*************************** Save data for debug ***************************/
 
-    std::string saveDataDir = "/sdcard/0/vins/";
-    std::string saveVideoTimePath;
-    std::ofstream ofsSaveDataFrame;
-    std::string saveVideoPath;
-    cv::VideoWriter videoWriter;
+//    std::string saveDataDir = "/sdcard/0/vins/";
     int framesPerSecond = 25; // 30
-
-//    static std::string saveImuPathAcc;
-//    static std::string saveImuPathGyr;
-//    static std::ofstream ofsSaveDataAcc;
-//    static std::ofstream ofsSaveDataGyr;
-
-    std::string saveImuPathAcc;
-    std::string saveImuPathGyr;
+    cv::VideoWriter videoWriter;
+    std::ofstream ofsSaveDataFrame;
     std::ofstream ofsSaveDataAcc;
     std::ofstream ofsSaveDataGyr;
     static queue<IMU_DATA> imuDataBufAcc, imuDataBufGyr;
@@ -366,8 +356,11 @@ private:
     bool imageCacheEnabled = cameraMode && !USE_PNP;
     
 public:
-    ViewController();
+    ViewController(const string& saveDataDir);
     ~ViewController();
+
+    void save_data_start(const string& saveDataDir);
+    void save_data_stop();
 
     inline static double timeStampToSec (long timeStamp) { return timeStamp / 1000000000.0; };
     static NSTimeInterval systemUptime();
@@ -793,9 +786,6 @@ public:
     bool saveData_isCancelled = false;
     void saveDataLoop();
     void saveDataLoopImu();
-    inline void setSaveDataDir(const string& path) {
-        this->saveDataDir = path + "/";
-    }
 
     void tapSaveImageToIphone(cv::Mat* image) {
     //- (void)tapSaveImageToIphone:(UIImage*)image
@@ -894,7 +884,7 @@ public:
         */
 //        LOGI("recordImageTime : %f %s", image_data.header, this->saveVideoTimePath.c_str());
         this->ofsSaveDataFrame << std::to_string(image_data.header) + "\n";
-        this->ofsSaveDataFrame.flush();
+//        this->ofsSaveDataFrame.flush();
 //        std::ofstream ofs;
 //        ofs.open(this->saveVideoTimePath, ios::in | ios::app);
 //        ofs << std::to_string(image_data.header) + "\n";

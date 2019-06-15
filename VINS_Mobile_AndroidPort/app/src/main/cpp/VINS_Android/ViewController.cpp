@@ -12,37 +12,13 @@ NSTimeInterval ViewController::systemUptime() {
     return time.tv_sec + time.tv_nsec / 1000000.0f;
 }
 
-ViewController::ViewController() {
+ViewController::ViewController(const string& saveDataDir) {
     LOGI("ViewController Constructor");
     this->instance = this;
-    
-    this->saveVideoTimePath = this->saveDataDir + "frame.txt";
-    this->ofsSaveDataFrame.open(this->saveVideoTimePath, ofstream::out);
-    LOGI("%s ofsSaveDataFrame.open", this->saveVideoTimePath.c_str());
-
-    this->saveVideoPath = this->saveDataDir + "video.avi";
-    int ret = this->videoWriter.open(this->saveVideoPath, cv::VideoWriter::fourcc('M','J','P','G'), framesPerSecond, cv::Size(videoWidth, videoHeight), true);
-    LOGI("%s VideoWriter.open %d", this->saveVideoPath.c_str(), ret);
-
-//    ViewController::saveImuPathAcc = this->saveDataDir + "acc.txt";
-//    ViewController::saveImuPathGyr = this->saveDataDir + "gyr.txt";
-//    ViewController::ofsSaveDataAcc.open(this->saveImuPathAcc, ofstream::out); //  | ofstream::app
-//    ViewController::ofsSaveDataGyr.open(this->saveImuPathGyr, ofstream::out); //  | ofstream::app
-    this->saveImuPathAcc = this->saveDataDir + "acc.txt";
-    this->saveImuPathGyr = this->saveDataDir + "gyr.txt";
-    this->ofsSaveDataAcc.open(this->saveImuPathAcc, ofstream::out); //  | ofstream::app
-    this->ofsSaveDataGyr.open(this->saveImuPathGyr, ofstream::out); //  | ofstream::app
 }
 
 ViewController::~ViewController() {
     LOGI("ViewController Destructor");
-
-    this->ofsSaveDataFrame.close();
-//    ViewController::ofsSaveDataAcc.close();
-//    ViewController::ofsSaveDataGyr.close();
-    this->ofsSaveDataAcc.close();
-    this->ofsSaveDataGyr.close();
-    this->videoWriter.release();
 }
 
 void ViewController::viewDidLoad() {
@@ -107,9 +83,11 @@ void ViewController::viewDidLoad() {
     // TODO: move further down
     // mainLoop=[[NSThread alloc]initWithTarget:self selector:@selector(run) object:nil];
     // [mainLoop setName:@"mainLoop"];
+    if (!this->saveData_isCancelled){
+        saveData = std::thread(&ViewController::saveDataLoop, this);
+        saveDataImu = std::thread(&ViewController::saveDataLoopImu, this);
+    }
 
-    saveData = std::thread(&ViewController::saveDataLoop, this);
-    saveDataImu = std::thread(&ViewController::saveDataLoopImu, this);
     // TODO: move further down
 //        saveData=[[NSThread alloc]initWithTarget:self selector:@selector(saveData) object:nil];
 //        [saveData setName:@"saveData"];
@@ -1095,6 +1073,42 @@ void ViewController::saveDataLoop() {
     }
 }
 
+
+
+void ViewController::save_data_start(const string& saveDataDir){
+    if (saveData_isCancelled) {
+        return;
+    }
+    std::string saveVideoTimePath = saveDataDir + "/frame.txt";
+    std::string saveVideoPath = saveDataDir + "/video.avi";
+    std::string saveImuPathAcc = saveDataDir + "/acc.txt";
+    std::string saveImuPathGyr = saveDataDir + "/gyr.txt";
+
+    this->ofsSaveDataAcc.open(saveImuPathAcc, ofstream::out); //  | ofstream::app
+    this->ofsSaveDataGyr.open(saveImuPathGyr, ofstream::out); //  | ofstream::app
+    this->ofsSaveDataFrame.open(saveVideoTimePath, ofstream::out);
+    int ret = this->videoWriter.open(saveVideoPath, cv::VideoWriter::fourcc('M','J','P','G'), framesPerSecond, cv::Size(videoWidth, videoHeight), true);
+    LOGI("%s ofsSaveDataFrame.open", saveVideoTimePath.c_str());
+    LOGI("%s VideoWriter.open %d", saveVideoPath.c_str(), ret);
+}
+
+void ViewController::save_data_stop(){
+    if (saveData_isCancelled) {
+        return;
+    }
+    while(!this->imuDataBufAcc.empty() && !this->imuDataBufGyr.empty() && !this->imgDataBuf.empty()) {
+        LOGI("ViewController::save_data_stop() imuDataBufAcc : %d", this->imuDataBufAcc.size());
+        LOGI("ViewController::save_data_stop() imuDataBufGyr : %d", this->imuDataBufGyr.size());
+        LOGI("ViewController::save_data_stop() imgDataBuf    : %d", this->imgDataBuf.size());
+        std::this_thread::sleep_for(std::chrono::milliseconds(20));
+    }
+    this->ofsSaveDataFrame.close();
+//    ViewController::ofsSaveDataAcc.close();
+//    ViewController::ofsSaveDataGyr.close();
+    this->ofsSaveDataAcc.close();
+    this->ofsSaveDataGyr.close();
+    this->videoWriter.release();
+}
 
 void ViewController::saveDataLoopImu() {
     while(!saveData_isCancelled) {

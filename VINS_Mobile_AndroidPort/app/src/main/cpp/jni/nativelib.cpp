@@ -22,12 +22,18 @@ extern "C"
 JNIEXPORT void JNICALL
 Java_com_thkoeln_jmoeller_vins_1mobile_1androidport_VinsJNI_init(JNIEnv *env, jobject instance, jstring saveDataDir) {
     
-    viewControllerGlobal = std::unique_ptr<ViewController>(new ViewController);
+
     LOGI("Successfully created Viewcontroller Object");
 
     char* str = (char*)env->GetStringUTFChars(saveDataDir, NULL);
-//    LOGI(str);
-    viewControllerGlobal->setSaveDataDir(str);
+    LOGI("%s", str);
+    viewControllerGlobal = std::unique_ptr<ViewController>(new ViewController(str));
+    if (strlen(str) < 1){
+        viewControllerGlobal->saveData_isCancelled = true;
+    } else {
+        viewControllerGlobal->saveData_isCancelled = false;
+        viewControllerGlobal->save_data_start(str);
+    }
     env->ReleaseStringUTFChars(saveDataDir, str);
     viewControllerGlobal->testMethod();
     
@@ -132,6 +138,9 @@ JNIEXPORT void JNICALL
 Java_com_thkoeln_jmoeller_vins_1mobile_1androidport_VinsJNI_onPause(JNIEnv *env, jclass type) {
     LOGI("Pause triggered, stopping SensorEvents");
     viewControllerGlobal->imuStopUpdate();
+    if (!viewControllerGlobal->saveData_isCancelled){
+        viewControllerGlobal->save_data_stop();
+    }
 }
 
 // Constants for ImageView visibility coming from Java

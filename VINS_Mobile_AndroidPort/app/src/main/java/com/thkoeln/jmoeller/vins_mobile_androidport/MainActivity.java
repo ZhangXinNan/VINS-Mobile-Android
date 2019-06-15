@@ -116,21 +116,9 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Log.i(TAG, "CPU ABI: " + android.os.Build.CPU_ABI);
-        
-        // first make sure the necessary permissions are given
-//        checkPermissionsIfNeccessary();
-        if (!this.checkPermissionsIfNeccessary()) {
-            Log.d(TAG, "permission art not given");
-        }
-        if(!checkBriefFileExistance()) {
-            Log.e(TAG, "Brief files not found here: " + directoryPathBriefFiles);
-            finish();
-        }
-        
-        initLooper();
-        initVINS();
-        initViews();
+        // 查看你的手机CPU架构，与build.gradle里的abiFilters必须一致，否则不能完成建图
+//        Log.i(TAG, "CPU ABI: " + android.os.Build.CPU_ABI);
+        Log.i(TAG, "onCreate: CPU ABI " + Build.SUPPORTED_ABIS[0]);
     }
 
     /**
@@ -148,8 +136,10 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
                    " File Exists: " + vocFile.exists() + 
                    " File Write: " + vocFile.canWrite() +  
                    " File Read: " + vocFile.canRead());
-        if(!vocFile.exists() || !vocFile.canRead() || !vocFile.canWrite())
+        if(!vocFile.exists() || !vocFile.canRead() || !vocFile.canWrite()) {
+            Log.e(TAG, "checkBriefFileExistance() Brief files not found here: " + filepathVoc);
             return false;
+        }
         
         String filepathPattern = directoryFile + File.separator + "brief_pattern.yml";
         File patternFile = new File(filepathPattern);
@@ -157,8 +147,10 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
                    " File Exists: " + patternFile.exists() + 
                    " File Write: " + patternFile.canWrite() +  
                    " File Read: " + patternFile.canRead());
-        if(!patternFile.exists() || !patternFile.canRead() || !patternFile.canWrite())
+        if(!patternFile.exists() || !patternFile.canRead() || !patternFile.canWrite()) {
+            Log.e(TAG, "checkBriefFileExistance() Brief files not found here: " + filepathPattern);
             return false;
+        }
         
         return true;
     }
@@ -430,6 +422,22 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
         }
     };
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        // first make sure the necessary permissions are given
+        if (!this.checkPermissionsIfNeccessary()) {
+            finish();
+        }
+        if(!checkBriefFileExistance()) {
+            finish();
+        }
+        initLooper();
+        initVINS();
+        initViews();
+    }
+
     /**
      * shutting down onPause
      */
@@ -464,6 +472,7 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
                 if(permissionsNotGrantedYet.size() > 0){
                     ActivityCompat.requestPermissions(this, permissionsNotGrantedYet.toArray(new String[permissionsNotGrantedYet.size()]),
                                                       PERMISSIONS_REQUEST_CODE);
+                    Log.d(TAG, "checkPermissionsIfNeccessary() permission art not given");
                     return false;
                 }
             }
@@ -485,8 +494,10 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
             if (grantResults.length == 0)
                 hasAllPermissions = false;
             for (int result : grantResults) {
-                if (result != PackageManager.PERMISSION_GRANTED)
+                if (result != PackageManager.PERMISSION_GRANTED) {
                     hasAllPermissions = false;
+                    break;
+                }
             }
 
             if(!hasAllPermissions){
