@@ -237,7 +237,7 @@ void ViewController::processImage(cv::Mat &image, double timeStamp, bool isScree
         {
 //            LOGE("Recording isn't supported yet");
             imgData.header = img_msg->header;
-            imgData.image = image; // imgData.image = MatToUIImage(image);
+            imgData.image = image.clone(); // imgData.image = MatToUIImage(image);
             imgDataBuf.push(imgData);
 //            return;
         }

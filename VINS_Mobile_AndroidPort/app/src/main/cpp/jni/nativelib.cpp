@@ -141,6 +141,7 @@ Java_com_thkoeln_jmoeller_vins_1mobile_1androidport_VinsJNI_onPause(JNIEnv *env,
     if (!viewControllerGlobal->saveData_isCancelled){
         viewControllerGlobal->save_data_stop();
     }
+    viewControllerGlobal->viewDidUnload();
 }
 
 // Constants for ImageView visibility coming from Java

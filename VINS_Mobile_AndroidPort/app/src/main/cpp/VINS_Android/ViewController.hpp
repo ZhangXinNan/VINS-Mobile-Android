@@ -1017,6 +1017,10 @@ public:
         [motionManager stopMagnetometerUpdates];
         [super viewDidUnload];
          */
+        this->mainLoop_isCancelled = true;
+        this->loop_thread_isCancelled = true;
+        this->globalLoopThread_isCancelled = true;
+        this->saveData_isCancelled = true;
     }
 
     void dealloc() {
