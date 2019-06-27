@@ -44,6 +44,6 @@ APP_STL := c++_static
 
 # APP_ABI := armeabi-v7a # Original Value
 # APP_ABI := arm64-v8a armeabi-v7a x86 x86_64 # This equals the default of all non deprecated archs
-APP_ABI := arm64-v8a armeabi-v7a
+APP_ABI := arm64-v8a
 APP_PLATFORM := android-26
 

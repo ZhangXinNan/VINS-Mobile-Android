@@ -5,6 +5,7 @@ android {
     defaultConfig {
         applicationId "com.thkoeln.jmoeller.vins_mobile_androidport"
         minSdkVersion 21
+        // 三星S7 edge android 8.0(26),  三星S7 android 7.0(24)
         targetSdkVersion 26
         versionCode 1
         versionName "1.0"
