@@ -111,16 +111,16 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
         setContentView(R.layout.activity_main);
         
         // first make sure the necessary permissions are given
-        checkPermissionsIfNeccessary();
+        this.checkPermissionsIfNeccessary();
         
-        if(!checkBriefFileExistance()) {
-            Log.e(TAG, "Brief files not found here: " + directoryPathBriefFiles);
+        if(!this.checkBriefFileExistance()) {
+            Log.e(MainActivity.TAG, "Brief files not found here: " + this.directoryPathBriefFiles);
             finish();
         }
         
-        initLooper();
-        initVINS();
-        initViews();
+        this.initLooper();
+        this.initVINS();
+        this.initViews();
     }
 
     /**
@@ -128,7 +128,7 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
      * @return true if files are existent and read and writable
      */
     private boolean checkBriefFileExistance() {
-        File directoryFile = new File(directoryPathBriefFiles);
+        File directoryFile = new File(this.directoryPathBriefFiles);
         if(!directoryFile.exists())
             return false;
 
@@ -157,17 +157,17 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
      * Starting separate thread to handle camera input
      */
     private void initLooper() {
-        threadHandler = new HandlerThread("Camera2Thread");
-        threadHandler.start();
-        handler = new Handler(threadHandler.getLooper());
+        this.threadHandler = new HandlerThread("Camera2Thread");
+        this.threadHandler.start();
+        this.handler = new Handler(this.threadHandler.getLooper());
     }
 
     /**
      * initializes an new VinsJNI Object
      */
     private void initVINS() {
-        vinsJNI = new VinsJNI();
-        vinsJNI.init();
+        this.vinsJNI = new VinsJNI();
+        this.vinsJNI.init();
     }
     
     /**
@@ -235,12 +235,12 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
 
             // check permissions
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-                checkPermissionsIfNeccessary();
+                this.checkPermissionsIfNeccessary();
                 return;
             }
             
             // start up Camera (not the recording)
-            cameraManager.openCamera(cameraID, cameraDeviceStateCallback, handler);
+            cameraManager.openCamera(cameraID, cameraDeviceStateCallback, this.handler);
         } catch (CameraAccessException e) {
             e.printStackTrace();
         }
@@ -297,7 +297,7 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
         // to set the format of captured images and the maximum number of images that can be accessed in mImageReader
         imageReader = ImageReader.newInstance(imageWidth, imageHeight, ImageFormat.YUV_420_888, 1);
 
-        imageReader.setOnImageAvailableListener(onImageAvailableListener, handler);
+        imageReader.setOnImageAvailableListener(onImageAvailableListener, this.handler);
 
 
         CameraManager cameraManager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
@@ -328,7 +328,7 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
         outputSurfaces.add(imageReader.getSurface());
         
         
-        camera.createCaptureSession(outputSurfaces, sessionStateCallback, handler);
+        camera.createCaptureSession(outputSurfaces, sessionStateCallback, this.handler);
     }
 
     private CameraCaptureSession.StateCallback sessionStateCallback = new CameraCaptureSession.StateCallback() {
@@ -355,7 +355,7 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
 //        previewBuilder.set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_AUTO);
         previewBuilder.set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_VIDEO);
 
-        session.setRepeatingRequest(previewBuilder.build(), null, handler);
+        session.setRepeatingRequest(previewBuilder.build(), null, this.handler);
     }
     
     /**
@@ -413,9 +413,9 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
      * shutting down onPause
      */
     protected void onPause() {
-        if (null != camera) {
-            camera.close();
-            camera = null;
+        if (null != this.camera) {
+            this.camera.close();
+            this.camera = null;
         }
         if (null != imageReader) {
             imageReader.close();

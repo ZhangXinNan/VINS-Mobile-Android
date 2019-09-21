@@ -1,4 +1,4 @@
-set(boost_include_dir /home/zhangxin/tools/boost_1_63_0/)
+set(boost_include_dir /home/zhangxin/tools/boost/boost_1_63_0/)
 add_library(boost_LIB INTERFACE)
 target_include_directories(
     boost_LIB
@@ -21,6 +21,7 @@ target_include_directories(
 set(ceres_include_dir ${CMAKE_CURRENT_SOURCE_DIR}/ceres-solver/include)
 set(ceres_miniglog_include_dir ${CMAKE_CURRENT_SOURCE_DIR}/ceres-solver/internal/ceres/miniglog)
 set(ceres_binary_dir ${CMAKE_CURRENT_SOURCE_DIR}/ceres-solver/obj/local/${ANDROID_ABI}/libceres.a)
+
 add_library(
     ceres_LIB
     STATIC

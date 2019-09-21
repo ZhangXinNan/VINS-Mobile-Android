@@ -2,22 +2,7 @@
 #define VINS_MOBILE_ANDROIDPORT_VIEWCONTROLLER_H
 
 
-
-/*
- * This is the class which corresponds to the ViewController-Objective C Class.
- * I started by copying all the code over 
- * and moved on by tweaking all the compile-errors
- * In that process i never deleted the original code but commented it out where i had replaced it
- * this was done with the intention of being able to quickly lock back into the original code
- */
-
-
-
 #import "utility.hpp"
-// iOS Specific OpenCV Parts
-// #import "CameraUtils.h" (another Objective C header)
-// #import <opencv2/imgcodecs/ios.h>
-// #import <opencv2/videoio/cap_ios.h>
 #import "feature_tracker.hpp"
 
 #import "global_param.hpp"
@@ -103,9 +88,6 @@ typedef shared_ptr <IMG_MSG const > ImgConstPtr;
 
 
 class ViewController {
-
-//@interface ViewController : UIViewController<CvVideoCameraDelegate,UITextViewDelegate>
-//{
 private:
     const int videoWidth = 480;
     const int videoHeight = 640;
